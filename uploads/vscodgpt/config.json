@@ -1,0 +1,35 @@
+{
+  "auth": {
+    "username": "admin",
+    "password": "admin123"
+  },
+  "logoTopo": "logo1.png",
+  "logoCentro": "logo2.png",
+  "setaImg": "seta.png",
+  "cores": [
+    "#FFD700",
+    "#FF4500",
+    "#1E90FF",
+    "#32CD32",
+    "#FF69B4"
+  ],
+  "espessuraBorda": 1,
+  "popup": {
+    "title": "oi",
+    "text": "Você ganhou um <strong>cupom exclusivo de desconto</strong> baseado na sua última compra no Mercado Livre.",
+    "background": "#ffffff",
+    "textColor": "#000000",
+    "buttonText": "Receba seu Cupom",
+    "buttonColor": "#25D366",
+    "whatsapp": "https://wa.me/SEUNUMERO"
+  },
+  "girar": {
+    "text": "girar",
+    "color": "#FF4500",
+    "textColor": "#ffffff"
+  },
+  "background": {
+    "page": "#f0f0f0",
+    "roleta": "transparent"
+  }
+}
