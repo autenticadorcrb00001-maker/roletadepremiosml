@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roleta de Prêmios - Shopee</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      font-family: 'Roboto', Arial, sans-serif;
+      background-color: #f04d2e;
+      overflow-x: hidden;
+    }
+    body { display: flex; justify-content: center; align-items: center; }
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      width: 100%;
+      max-width: 450px;
+      padding: 15px;
+    }
+    .roleta-container {
+      background: #f04d2e;
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      text-align: center;
+      position: relative;
+      width: 100%;
+      max-width: 400px;
+    }
+    canvas {
+      display: block;
+      margin: 20px auto;
+      border-radius: 50%;
+      width: 100%;
+      height: auto;
+    }
+    #descricao-roleta {
+      font-weight: 700;
+      font-size: 1.2rem;
+      margin-bottom: 12px;
+      color: #ffffff;
+      text-align: center;
+      width: 100%;
+      word-wrap: break-word;
+    }
+    /* ✅ CONTROLE DE TAMANHO DA LOGO SUPERIOR */
+    #logo-cima {
+      margin-bottom: 10px;
+      width: 150px;        /* ← ALTERE ESTE VALOR PARA MUDAR O TAMANHO */
+      max-width: 100%;     /* Garante que não ultrapasse o container */
+      height: auto;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    button {
+      background-color: #ff6b47;
+      color: #fff;
+      border: none;
+      padding: 14px 25px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: 700;
+      transition: all 0.3s ease;
+    }
+    button:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 6px 10px rgba(0,0,0,0.25);
+    }
+    .popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: #f04d2e;
+      color: #ffffff;
+      padding: 30px 25px;
+      border-radius: 20px;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+      text-align: center;
+      z-index: 9999;
+      width: 90%;
+      max-width: 380px;
+      transition: transform 0.4s ease;
+    }
+    .popup.show { transform: translate(-50%, -50%) scale(1); }
+    .popup h2 {
+      font-weight: 700;
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
+    .popup p {
+      font-size: 16px;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .whatsapp-btn {
+      display: inline-block;
+      background: #25D366;
+      color: rgb(254, 254, 254);
+      text-decoration: none;
+      padding: 14px 20px;
+      border-radius: 12px;
+      font-weight: 700;
+      transition: all 0.3s ease;
+    }
+    .whatsapp-btn:hover {
+      background: #1ebe57;
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+    }
+    .confete {
+      position: fixed;
+      bottom: 0;
+      width: 10px;
+      height: 10px;
+      opacity: 0.9;
+      pointer-events: none;
+      border-radius: 50%;
+      z-index: 2;
+      animation: subirConfete linear forwards;
+    }
+    
+    /* Estilos para a seta animada */
+    .seta-container {
+      position: absolute;
+      top: 59%;
+      right: 0;
+      transform: translateY(-50%);
+      z-index: 10;
+      width: 90px;
+      height: 90px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .seta {
+      width: 70px;
+      height: 70px;
+      transition: transform 0.1s ease-out;
+      animation: pulsar 2s infinite;
+    }
+    
+    @keyframes pulsar {
+      0% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-5px) scale(1.05); }
+      100% { transform: translateY(0) scale(1); }
+    }
+    
+    @keyframes destaque {
+      0% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-8px) scale(1.1); }
+      100% { transform: translateY(0) scale(1); }
+    }
+
+    @keyframes subirConfete {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
+    }
+    
+    /* Novos estilos para as descrições adicionais */
+    .descricao-adicional {
+      color: #ffffff;
+      text-align: center;
+      margin-bottom: 8px;
+      font-size: 1rem;
+      font-weight: 500;
+    }
+    
+    @media (max-width: 500px) {
+      button { width: 90%; font-size: 16px; }
+      #descricao-roleta { font-size: 1rem; }
+      .popup { padding: 20px 15px; }
+      .seta-container {
+        width: 70px;
+        height: 70px;
+      }
+      .seta {
+        width: 60px;
+        height: 60px;
+      }
+      .descricao-adicional {
+        font-size: 0.9rem;
+      }
+      /* Logo menor em telas pequenas */
+      #logo-cima {
+        width: 120px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="roleta-container">
+      <!-- Logo acima das descrições -->
+      <img id="logo-cima" src="assets/logo1.png" alt="Logo Superior">
+      
+      <!-- Duas descrições adicionais -->
+      <div class="descricao-adicional">Participe da promoção especial</div>
+      <div class="descricao-adicional">Gire a roleta e ganhe descontos incríveis!</div>
+      
+      <h2 id="descricao-roleta">Mês de prêmios: Roleta premiada<br>Shopee</h2>
+      <canvas id="roleta" width="400" height="400"></canvas>
+      
+      <!-- Container para a seta animada -->
+      <div class="seta-container">
+        <img class="seta" src="assets/seta.png" alt="Seta" id="seta-animada">
+      </div>
+      
+      <button id="girar-btn">GIRAR A ROLETA</button>
+    </div>
+  </div>
+
+  <div class="popup" id="popup">
+    <h2>Parabéns! 🎉</h2>
+    <p>
+      Você ganhou um <strong>cupom exclusivo de desconto</strong> baseado na sua última compra na Shopee.<br>
+      <strong>Exemplo</strong>: se você comprou um produto de <strong>R$1500</strong>, seu cupom será do mesmo valor.
+    </p>
+    <a class="whatsapp-btn" id="whatsapp-link" href="https://wa.me/SEUNUMERO" target="_blank">Receber seu Cupom</a>
+  </div>
+
+  <script>
+    // Configurações padrão - ATUALIZADAS para compatibilidade com o painel
+    let configuracoes = {
+      corFundoTela: '#f04d2e',
+      corFundoRoleta: '#f04d2e',
+      corBordaRoleta: '#c73c23',
+      corBotaoGirar: '#ff6b47',
+      corFatiaPar: '#f04d2e',
+      corFatiaImpar: '#ffffff',
+      corTexto: '#ffffff',
+      textoBotaoGirar: 'GIRAR A ROLETA',
+      textoDescricao: 'Mês de prêmios: Roleta premiada<br>Shopee',
+      numeroWhatsapp: 'SEUNUMERO',
+      premioSorteado: 1, // Prêmio fixo para sempre cair no mesmo
+      corFundoPopup: '#f04d2e',
+      corBotaoWhatsapp: '#25D366',
+      textoTituloPopup: 'Parabéns! 🎉',
+      textoPopup: 'Você ganhou um <strong>cupom exclusivo de desconto</strong> baseado na sua última compra na Shopee.<br><strong>Exemplo</strong>: se você comprou um produto de <strong>R$1500</strong>, seu cupom será do mesmo valor.',
+      textoBotaoWhatsapp: 'Receber seu Cupom',
+      // NOVAS CONFIGURAÇÕES
+      fontePersonalizada: 'Roboto',
+      corDivisorFatias: '#ffffff'
+    };
+
+    // Variáveis para controle da animação da seta
+    let ultimoAngulo = 0;
+    let animacaoAtiva = false;
+
+    // ✅ FUNÇÃO PARA CARREGAR IMAGENS DO LOCALSTORAGE (RESTAURADA)
+    function carregarImagemDoStorage(chave, imagemPadrao) {
+      const imagemSalva = localStorage.getItem(chave);
+      return imagemSalva || imagemPadrao;
+    }
+
+    // ✅ FUNÇÃO PARA ATUALIZAR IMAGENS COM LOCALSTORAGE (RESTAURADA)
+    function atualizarImagens() {
+      // Logo superior
+      const logoSuperior = document.getElementById('logo-cima');
+      logoSuperior.src = carregarImagemDoStorage('logoSuperior', 'assets/logo1.png');
+      
+      // Logo central
+      logoCentro.src = carregarImagemDoStorage('logoCentral', 'assets/logo2.png');
+      
+      // Seta
+      const seta = document.getElementById('seta-animada');
+      seta.src = carregarImagemDoStorage('seta', 'assets/seta.png');
+      
+      // Prêmios
+      premios.forEach((p, i) => {
+        const novaImagem = carregarImagemDoStorage(`premio${i + 1}`, p.img);
+        if (p.img !== novaImagem) {
+          p.img = novaImagem;
+          p._imgObj.src = p.img;
+        }
+      });
+    }
+
+    // Carregar configurações do localStorage
+    function carregarConfiguracoes() {
+      const configSalvas = localStorage.getItem('configRoleta');
+      if (configSalvas) {
+        const config = JSON.parse(configSalvas);
+        // Mesclar configurações salvas com as padrão
+        configuracoes = {...configuracoes, ...config};
+        aplicarConfiguracoes();
+      }
+    }
+
+    // Aplicar configurações à interface - ATUALIZADA para todas as novas propriedades
+    function aplicarConfiguracoes() {
+      // Aplicar fonte personalizada
+      document.body.style.fontFamily = configuracoes.fontePersonalizada + ", Arial, sans-serif";
+      
+      // Aplicar cores de fundo
+      document.body.style.backgroundColor = configuracoes.corFundoTela;
+      document.querySelector('.roleta-container').style.backgroundColor = configuracoes.corFundoRoleta;
+      document.querySelector('.popup').style.backgroundColor = configuracoes.corFundoPopup;
+      
+      // Aplicar cores e texto do botão
+      document.getElementById('girar-btn').style.backgroundColor = configuracoes.corBotaoGirar;
+      document.getElementById('girar-btn').textContent = configuracoes.textoBotaoGirar;
+      
+      // Aplicar texto e cor de descrição
+      document.getElementById('descricao-roleta').innerHTML = configuracoes.textoDescricao;
+      document.getElementById('descricao-roleta').style.color = configuracoes.corTexto;
+      
+      // Aplicar configurações do WhatsApp
+      document.getElementById('whatsapp-link').href = `https://wa.me/${configuracoes.numeroWhatsapp}`;
+      document.getElementById('whatsapp-link').textContent = configuracoes.textoBotaoWhatsapp;
+      document.getElementById('whatsapp-link').style.backgroundColor = configuracoes.corBotaoWhatsapp;
+      
+      // Aplicar configurações do popup
+      document.querySelector('.popup h2').textContent = configuracoes.textoTituloPopup;
+      document.querySelector('.popup p').innerHTML = configuracoes.textoPopup;
+      
+      // Aplicar descrições adicionais
+      const descricoesAdicionais = document.querySelectorAll('.descricao-adicional');
+      if (descricoesAdicionais.length >= 2) {
+        descricoesAdicionais[0].textContent = configuracoes.descricaoAdicional1 || 'Participe da promoção especial';
+        descricoesAdicionais[1].textContent = configuracoes.descricaoAdicional2 || 'Gire a roleta e ganhe descontos incríveis!';
+      }
+      
+      // Redesenhar a roleta para aplicar as novas cores
+      desenharRoleta();
+    }
+
+    // Código da roleta
+    const canvas = document.getElementById("roleta");
+    const ctx = canvas.getContext("2d");
+    const largura = canvas.width;
+    const altura = canvas.height;
+    const raio = largura / 2;
+    const espessuraBorda = 22;
+
+    // Prêmios
+    const premios = [
+      { img: "assets/p1.png", imgSize: 80 },
+      { img: "assets/p2.png", imgSize: 80 },
+      { img: "assets/p3.png", imgSize: 85 },
+      { img: "assets/p4.png", imgSize: 80 },
+      { img: "assets/p5.png", imgSize: 95 },
+      { img: "assets/p6.png", imgSize: 95 }
+    ];
+
+    let anguloAtual = 0;
+
+    const logoCentro = new Image();
+    logoCentro.src = 'assets/logo2.png';
+
+    premios.forEach(p => { 
+      p._imgObj = new Image(); 
+      p._imgObj.src = p.img; 
+      p._imgObj.onload = desenharRoleta;
+    });
+
+    logoCentro.onload = desenharRoleta;
+
+    function desenharRoleta() {
+      ctx.clearRect(0, 0, largura, altura);
+      const anguloFatia = (2 * Math.PI) / premios.length;
+
+      premios.forEach((p, i) => {
+        const inicio = anguloAtual + i * anguloFatia;
+        const fim = inicio + anguloFatia;
+
+        // Usar as cores das configurações do painel
+        const corFatia = (i % 2 === 0) ? configuracoes.corFatiaPar : configuracoes.corFatiaImpar;
+
+        ctx.beginPath();
+        ctx.moveTo(raio, raio);
+        ctx.arc(raio, raio, raio - espessuraBorda, inicio, fim);
+        ctx.closePath();
+        ctx.fillStyle = corFatia;
+        ctx.fill();
+
+        // Desenhar divisores entre as fatias (pontos)
+        ctx.beginPath();
+        ctx.arc(raio, raio, raio - espessuraBorda, inicio, inicio, false);
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = configuracoes.corDivisorFatias || '#ffffff';
+        ctx.stroke();
+
+        // imagens dos prêmios
+        ctx.save();
+        ctx.translate(raio, raio);
+        ctx.rotate(inicio + anguloFatia / 2);
+        if (p._imgObj.complete) {
+          ctx.drawImage(p._imgObj, raio - espessuraBorda - p.imgSize - 20, -p.imgSize/2, p.imgSize, p.imgSize);
+        }
+        ctx.restore();
+      });
+
+      // borda - usando a cor do painel
+      ctx.beginPath();
+      ctx.arc(raio, raio, raio - espessuraBorda / 2, 0, 2 * Math.PI);
+      ctx.lineWidth = espessuraBorda + 4;
+      const grad = ctx.createRadialGradient(raio, raio, raio - espessuraBorda, raio, raio, raio);
+      grad.addColorStop(0, configuracoes.corBordaRoleta); 
+      grad.addColorStop(1, escurecerCor(configuracoes.corBordaRoleta, 20)); 
+      ctx.strokeStyle = grad;
+      ctx.stroke();
+
+      // logo central
+      if (logoCentro.complete) {
+        const tamanhoLogo = 90;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(raio, raio, tamanhoLogo/2, 0, 2*Math.PI);
+        ctx.closePath();
+        ctx.fillStyle = "#ffffff";
+        ctx.fill();
+        ctx.clip();
+        ctx.drawImage(logoCentro, raio - tamanhoLogo/2, raio - tamanhoLogo/2, tamanhoLogo, tamanhoLogo);
+        ctx.restore();
+      }
+
+      // Verificar se uma fatia está passando pela seta e animá-la
+      if (animacaoAtiva) {
+        verificarFatiaNaSeta();
+      }
+    }
+
+    // Função para verificar se uma fatia está passando pela seta
+    function verificarFatiaNaSeta() {
+      const anguloFatia = (2 * Math.PI) / premios.length;
+      const anguloSeta = Math.PI / 2; // A seta está à direita (90 graus)
+      
+      // Verificar se alguma fatia está próxima da seta
+      for (let i = 0; i < premios.length; i++) {
+        const centroFatia = (anguloAtual + i * anguloFatia + anguloFatia / 2) % (2 * Math.PI);
+        const diferenca = Math.abs(centroFatia - anguloSeta);
+        
+        // Se uma fatia estiver próxima da seta (dentro de 0.1 radianos)
+        if (diferenca < 0.1 || diferenca > (2 * Math.PI - 0.1)) {
+          // Adicionar efeito de destaque na seta
+          const seta = document.getElementById('seta-animada');
+          seta.style.animation = 'none';
+          setTimeout(() => {
+            seta.style.animation = 'destaque 0.3s forwards';
+          }, 10);
+          break;
+        }
+      }
+    }
+
+    // Função para escurecer uma cor (para o gradiente da borda)
+    function escurecerCor(cor, quantidade) {
+      let r = parseInt(cor.substring(1, 3), 16);
+      let g = parseInt(cor.substring(3, 5), 16);
+      let b = parseInt(cor.substring(5, 7), 16);
+      
+      r = Math.max(0, r - quantidade);
+      g = Math.max(0, g - quantidade);
+      b = Math.max(0, b - quantidade);
+      
+      return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    }
+
+    function girar() {
+      const indicePremio = configuracoes.premioSorteado;
+      const anguloFatia = (2*Math.PI)/premios.length;
+      const alvo = (2*Math.PI) - (indicePremio*anguloFatia + anguloFatia/2);
+      const voltas = 5;
+      const anguloFinal = (2*Math.PI*voltas) + alvo;
+      const duracao = 5000;
+      let inicio = null;
+      
+      // Iniciar animação da seta
+      animacaoAtiva = true;
+      const seta = document.getElementById('seta-animada');
+      seta.style.animation = 'pulsar 2s infinite';
+
+      function animacao(timestamp) {
+        if (!inicio) inicio = timestamp;
+        let progresso = timestamp - inicio;
+        let rotacao = easeOut(progresso, 0, anguloFinal, duracao);
+        anguloAtual = rotacao % (2*Math.PI);
+        desenharRoleta();
+        if (progresso < duracao) {
+          requestAnimationFrame(animacao);
+        } else {
+          animacaoAtiva = false;
+          seta.style.animation = 'none'; // Parar animação da seta
+          premiado();
+        }
+      }
+      requestAnimationFrame(animacao);
+    }
+
+    function easeOut(t, b, c, d) { t /= d; return -c*t*(t-2) + b; }
+
+    function premiado() {
+      gerarConfetes();
+      mostrarPopup();
+    }
+
+    function mostrarPopup() { document.getElementById('popup').classList.add('show'); }
+
+    function gerarConfetes() {
+      const cores = [configuracoes.corFundoTela, "#fff", "#FFAB91", "#FFCCBC", "#FFE0B2"];
+      for (let i=0;i<120;i++){
+        const confete = document.createElement("div");
+        confete.classList.add("confete");
+        confete.style.backgroundColor = cores[Math.floor(Math.random()*cores.length)];
+        confete.style.left = Math.random()*window.innerWidth+"px";
+        const size = Math.random()*8+6;
+        confete.style.width=size+"px";
+        confete.style.height=size+"px";
+        confete.style.animationDuration=(2.5+Math.random()*2)+"s";
+        document.body.appendChild(confete);
+        setTimeout(()=>confete.remove(),5000);
+      }
+    }
+
+    // ✅ INICIALIZAÇÃO CORRIGIDA - COM SUPORTE ÀS IMAGENS DO PAINEL
+    document.getElementById('girar-btn').addEventListener('click', girar);
+    carregarConfiguracoes();
+    atualizarImagens(); // ← RESTAURADO: Carrega imagens do painel
+    desenharRoleta();
+
+    // ✅ VERIFICAR ATUALIZAÇÕES A CADA 2 SEGUNDOS - INCLUINDO IMAGENS
+    setInterval(() => {
+      carregarConfiguracoes();
+      atualizarImagens(); // ← RESTAURADO: Atualiza imagens do painel
+    }, 2000);
+  </script>
+</body>
+</html>
